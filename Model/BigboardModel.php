@@ -1,6 +1,6 @@
 <?php
 
-namespace Kanboard\Plugin\BigBoard\Model;
+namespace Kanboard\Plugin\Bigboard\Model;
 
 use Kanboard\Core\Base;
 use Kanboard\Model\ProjectModel;

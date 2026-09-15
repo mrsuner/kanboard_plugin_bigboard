@@ -55,8 +55,8 @@ class Bigboard extends BaseController
     {
         $user = $this->getUser();
         $project_ids = $this->bigboardModel->selectFindAllProjectsById($user['id']);
-        $search = urldecode($this->request->getStringParam('search', $this->userSession->getBigboardSearch()) ?? '');
-        $this->userSession->setBigboardSearch($search);
+        $search = urldecode($this->request->getStringParam('search', $this->getBigboardSearch()) ?? '');
+        $this->setBigboardSearch($search);
         $nb_projects = count($project_ids);
 
         $categories_list = $users_list = $custom_filters_list = [];
@@ -91,7 +91,7 @@ class Bigboard extends BaseController
         ]));
         // Draw a header First
         $menu = $this->template->render('bigboard:board/switcher', [
-            'bigboarddisplaymode' => $this->userSession->isBigboardCollapsed(),
+            'bigboarddisplaymode' => $this->isBigboardCollapsed(),
         ]);
         echo '<section>'.$menu.'</section>';
         echo '<div align=center style="color:lightgray"><span id="status_update"></span></div>';
@@ -134,7 +134,7 @@ class Bigboard extends BaseController
             $project = $this->projectModel->getByIdWithOwner($project_id);
             $search = $this->helper->projectHeader->getSearchQuery($project);
 
-            $this->userMetadataCacheDecorator->set(UserMetadataModel::KEY_BOARD_COLLAPSED.$project_id, $this->userSession->isBigboardCollapsed());
+            $this->userMetadataCacheDecorator->set(UserMetadataModel::KEY_BOARD_COLLAPSED.$project_id, $this->isBigboardCollapsed());
 
             $Project['id'] = $project_id;
             $Project['nom'] = $project['name'];
@@ -161,10 +161,10 @@ class Bigboard extends BaseController
         foreach ($project_ids as $project_id) {
             if ($this->bigboardModel->selectFind($project_id, $user['id'])) {
                 $project = $this->projectModel->getByIdWithOwner($project_id);
-                $search = $this->userSession->getBigBoardSearch();
+                $search = $this->getBigboardSearch();
                 ++$nb;
 
-                $this->userMetadataCacheDecorator->set(UserMetadataModel::KEY_BOARD_COLLAPSED.$project_id, $this->userSession->isBigboardCollapsed());
+                $this->userMetadataCacheDecorator->set(UserMetadataModel::KEY_BOARD_COLLAPSED.$project_id, $this->isBigboardCollapsed());
 
                 echo $this->template->render('bigboard:board/view', [
                     'no_layout' => true,
@@ -199,5 +199,21 @@ class Bigboard extends BaseController
         } else {
             $this->response->redirect($this->helper->url->to('Bigboard', 'index', ['plugin' => 'Bigboard']));
         }
+    }
+
+    /** Bigboard state belongs to the current PHP session, not core UserSession. */
+    private function isBigboardCollapsed(): bool
+    {
+        return session_is_true('bigboardCollapsed');
+    }
+
+    private function getBigboardSearch(): string
+    {
+        return (string) session_get('bigboardSearch');
+    }
+
+    private function setBigboardSearch(string $search): void
+    {
+        session_set('bigboardSearch', $search);
     }
 }
