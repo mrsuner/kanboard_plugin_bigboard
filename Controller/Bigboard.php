@@ -54,7 +54,8 @@ class Bigboard extends BaseController
     public function index()
     {
         $user = $this->getUser();
-        $project_ids = $this->bigboardModel->selectFindAllProjectsById($user['id']);
+        $scope = $this->resolveProjectScope($user['id']);
+        $project_ids = $scope['project_ids'];
         $search = urldecode($this->request->getStringParam('search', $this->getBigboardSearch()) ?? '');
         $this->setBigboardSearch($search);
         $nb_projects = count($project_ids);
@@ -82,20 +83,23 @@ class Bigboard extends BaseController
         $this->response->html($this->helper->layout->app('bigboard:board/show', [
             'values' => [
                 'search' => $search,
+                'scope' => $scope['key'],
             ],
             'user' => $user,
             'custom_filters_list' => isset($custom_filters_list) ? $custom_filters_list : [],
             'users_list' => isset($users_list) ? $users_list : [],
             'categories_list' => isset($categories_list) ? $categories_list : [],
-            'title' => t('BigBoard').' ('.$nb_projects.') ',
+            'title' => t('BigBoard').' ('.$nb_projects.') — '.$scope['name'],
         ]));
         // Draw a header First
         $menu = $this->template->render('bigboard:board/switcher', [
             'bigboarddisplaymode' => $this->isBigboardCollapsed(),
+            'portfolio_scopes' => $scope['portfolio_scopes'],
+            'scope' => $scope,
         ]);
         echo '<section>'.$menu.'</section>';
         echo '<div align=center style="color:lightgray"><span id="status_update"></span></div>';
-        $this->showProjects($project_ids);
+        $this->showProjects($project_ids, $scope);
     }
 
     public function create(array $values = [], array $errors = [])
@@ -153,14 +157,13 @@ class Bigboard extends BaseController
      *
      * @return bool
      */
-    private function showProjects($project_ids)
+    private function showProjects($project_ids, array $scope)
     {
         echo "<div id='bigboard'>";
-        $user = $this->getUser();
         $nb = 0;
         foreach ($project_ids as $project_id) {
-            if ($this->bigboardModel->selectFind($project_id, $user['id'])) {
-                $project = $this->projectModel->getByIdWithOwner($project_id);
+            $project = $this->projectModel->getByIdWithOwner($project_id);
+            if (! empty($project)) {
                 $search = $this->getBigboardSearch();
                 ++$nb;
 
@@ -182,8 +185,12 @@ class Bigboard extends BaseController
         }
         if (0 == $nb) {
             echo "<div align=center><p>&nbsp;<p>&nbsp;<p>&nbsp;<p></br><span class='alert'><i class='fa fa-info fa-fw js-modal-medium'></i>";
-            echo t('no project has been selected yet for multiple view ; you can select some now : ');
-            echo "<i class='fa fa-cogs fa-fw'></i><a href='?controller=Bigboard&amp;action=select&amp;plugin=Bigboard&amp;boardview=active' class='js-modal-medium' title='options'>".t('options').'</a>';
+            if ($scope['key'] === 'selected') {
+                echo t('no project has been selected yet for multiple view ; you can select some now : ');
+                echo "<i class='fa fa-cogs fa-fw'></i><a href='?controller=Bigboard&amp;action=select&amp;plugin=Bigboard&amp;boardview=active' class='js-modal-medium' title='options'>".t('options').'</a>';
+            } else {
+                echo t('No accessible projects are available in this portfolio group.');
+            }
             echo '</span></div>';
         }
         echo '</div>';
@@ -194,11 +201,46 @@ class Bigboard extends BaseController
         session_set('bigboardCollapsed', $mode);
 
         if ($this->request->isAjax()) {
-            $project_ids = array_reverse($this->projectPermissionModel->getActiveProjectIds(session_get('user')['id']));
-            $this->showProjects($project_ids);
+            $scope = $this->resolveProjectScope($this->getUser()['id']);
+            $this->showProjects($scope['project_ids'], $scope);
         } else {
-            $this->response->redirect($this->helper->url->to('Bigboard', 'index', ['plugin' => 'Bigboard']));
+            $this->response->redirect($this->helper->url->to('Bigboard', 'index', array(
+                'plugin' => 'Bigboard',
+                'scope' => $this->request->getStringParam('scope', 'selected'),
+            )));
         }
+    }
+
+    /**
+     * Resolve a view without modifying Bigboard's saved project selection.
+     */
+    private function resolveProjectScope($userId)
+    {
+        $activeProjectIds = array_values(array_unique(array_map('intval', $this->projectPermissionModel->getActiveProjectIds($userId))));
+        $selectedProjectIds = array_values(array_intersect(
+            $this->bigboardModel->selectFindAllProjectsById($userId),
+            $activeProjectIds
+        ));
+        $portfolioScopes = $this->portfolioGroupScopeModel->getScopes($activeProjectIds);
+        $requestedScope = $this->request->getStringParam('scope', 'selected');
+
+        foreach ($portfolioScopes as $portfolioScope) {
+            if ($portfolioScope['key'] === $requestedScope) {
+                return array(
+                    'key' => $portfolioScope['key'],
+                    'name' => $portfolioScope['name'],
+                    'project_ids' => $portfolioScope['project_ids'],
+                    'portfolio_scopes' => $portfolioScopes,
+                );
+            }
+        }
+
+        return array(
+            'key' => 'selected',
+            'name' => t('Selected projects'),
+            'project_ids' => $selectedProjectIds,
+            'portfolio_scopes' => $portfolioScopes,
+        );
     }
 
     /** Bigboard state belongs to the current PHP session, not core UserSession. */

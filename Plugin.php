@@ -41,6 +41,7 @@ class Plugin extends Base
             ],
             'Plugin\Bigboard\Model' => [
                 'BigboardModel',
+                'PortfolioGroupScopeModel',
             ],
         ];
     }
@@ -57,17 +58,17 @@ class Plugin extends Base
 
     public function getPluginAuthor()
     {
-        return 'BlueTeck, Thomas Stinner, Pierre Cadeot, PapeCoding, Chaosmeister, Jake G';
+        return 'BlueTeck, Thomas Stinner, Pierre Cadeot, PapeCoding, Chaosmeister, Jake G; maintained by Luke Sun';
     }
 
     public function getPluginVersion()
     {
-        return '1.5.2';
+        return '1.6.0';
     }
 
     public function getPluginHomepage()
     {
-        return 'https://github.com/BlueTeck/kanboard_plugin_bigboard';
+        return 'https://github.com/mrsuner/kanboard_plugin_bigboard';
     }
 
     public function getCompatibleVersion()

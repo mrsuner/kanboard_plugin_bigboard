@@ -24,3 +24,18 @@ or
 
 - Create a folder **plugins/Bigboard**
 - Copy all files under this directory
+
+## PortfolioDashboard integration
+
+Bigboard works without PortfolioDashboard. When the optional
+`PortfolioDashboard` plugin is installed, Bigboard adds a **Portfolio group**
+scope switcher beside its existing project-selection controls.
+
+- **Selected projects** continues to use Bigboard's existing per-user
+  `bigboard_selected` list.
+- A Portfolio group is a temporary view scope. Switching to one never rewrites
+  the saved Bigboard selection.
+- Only active projects the current user can access are rendered, even if a
+  Portfolio group contains additional projects.
+- If PortfolioDashboard is absent or unavailable, the group switcher is hidden
+  and the original Bigboard behavior is unchanged.

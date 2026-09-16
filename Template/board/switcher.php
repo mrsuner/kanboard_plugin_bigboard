@@ -1,6 +1,17 @@
 <div class="table-list">
 	<div class="views-switcher-component">
 		<ul class="views">
+			<?php if (! empty($portfolio_scopes)): ?>
+			<li class="bigboard-portfolio-scope">
+				<label for="bigboard-portfolio-scope"><?= t('Portfolio group') ?></label>
+				<select id="bigboard-portfolio-scope" onchange="window.location.href=this.value">
+					<option value="<?= $this->text->e($this->url->href('Bigboard', 'index', array('plugin' => 'Bigboard', 'scope' => 'selected'))) ?>" <?= $scope['key'] === 'selected' ? 'selected' : '' ?>><?= t('Selected projects') ?></option>
+					<?php foreach ($portfolio_scopes as $portfolio_scope): ?>
+						<option value="<?= $this->text->e($this->url->href('Bigboard', 'index', array('plugin' => 'Bigboard', 'scope' => $portfolio_scope['key']))) ?>" <?= $scope['key'] === $portfolio_scope['key'] ? 'selected' : '' ?>><?= $this->text->e($portfolio_scope['name']) ?> (<?= count($portfolio_scope['project_ids']) ?>)</option>
+					<?php endforeach ?>
+				</select>
+			</li>
+			<?php endif ?>
 			<li>
 				<a href="<?= $this->app->config('application_url') ?>"><i class="fa fa-home fa-fw"></i><?= t('Home') ?></a>
 			</li>
@@ -15,10 +26,10 @@
 			</li>
 			<li>
 				<span class="filter-display-mode" <?= $bigboarddisplaymode ? '' : 'style="display: none;"' ?>>
-					<?= $this->url->icon('expand', t('Expand tasks'), 'Bigboard', 'expandAll', array('plugin' => 'Bigboard'), false, 'board-display-mode') ?>
+				<?= $this->url->icon('expand', t('Expand tasks'), 'Bigboard', 'expandAll', array('plugin' => 'Bigboard', 'scope' => $scope['key']), false, 'board-display-mode') ?>
 				</span>
 				<span class="filter-display-mode" <?= $bigboarddisplaymode ? 'style="display: none;"' : '' ?>>
-					<?= $this->url->icon('compress', t('Collapse tasks'), 'Bigboard', 'collapseAll', array('plugin' => 'Bigboard'), false, 'board-display-mode') ?>
+				<?= $this->url->icon('compress', t('Collapse tasks'), 'Bigboard', 'collapseAll', array('plugin' => 'Bigboard', 'scope' => $scope['key']), false, 'board-display-mode') ?>
 				</span>
 			</li>
 			<li>

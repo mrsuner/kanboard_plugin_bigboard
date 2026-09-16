@@ -3,6 +3,7 @@
         <?= $this->form->hidden('controller', array('controller' => 'Bigboard')) ?>
         <?= $this->form->hidden('action', array('action' => 'index')) ?>
         <?= $this->form->hidden('plugin', array('plugin' => 'Bigboard')) ?>
+        <?= $this->form->hidden('scope', $values) ?>
         <div class="input-addon">
             <?= $this->form->text('search', $values, array(), array(empty($values['search']) ? 'autofocus' : '', 'placeholder="'.t('Search').'"'), 'input-addon-field') ?>
             <div class="input-addon-item">

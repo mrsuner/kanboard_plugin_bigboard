@@ -41,3 +41,18 @@ div.selitem input[type=checkbox]:checked + span {
 label.sel {
     margin-top: -1px;
 }
+
+.bigboard-portfolio-scope {
+    align-items: center;
+    display: flex;
+    gap: 0.35rem;
+}
+
+.bigboard-portfolio-scope label {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.bigboard-portfolio-scope select {
+    max-width: 15rem;
+}
